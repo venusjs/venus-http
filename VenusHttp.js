@@ -7,9 +7,10 @@ module.exports = VenusHttp;
  * @constructor
  * @param {Venus} venus context object
  */
-function VenusHttp(venus, log) {
+function VenusHttp(venus) {
   this.venus      = venus;
-  this.log        = log;
+  this.info       = venus.info;
+  this.debug      = venus.debug;
   this.namespaces = {};
 
   this.bindEvents(venus);
@@ -78,7 +79,7 @@ VenusHttp.prototype.addNamespaceHandler = function (namespace, fn, ctx) {
     ctx : ctx
   });
 
-  this.log('Added namespace handler for', this.log.yellow('/' + namespace));
+  this.info('Added namespace handler for', this.info.yellow('/' + namespace));
 };
 
 /**
