@@ -12,6 +12,8 @@ function VenusHttp(venus) {
   this.info       = venus.info;
   this.debug      = venus.debug;
   this.namespaces = {};
+  this.config     = venus.config['venus-http'] || {};
+  this.port       = this.config.port || 7878;
 
   this.bindEvents(venus);
   this.addNamespaceHandler('', this.onIndexRequest, this);
@@ -33,7 +35,8 @@ VenusHttp.prototype.bindEvents = function (venus) {
  */
 VenusHttp.prototype.onStart = function () {
   this.server = http.createServer(this.routeRequest.bind(this));
-  this.server.listen(7878);
+  this.server.listen(this.port);
+  this.info('Listening on port', this.info.yellow(this.port));
 };
 
 /**
@@ -42,10 +45,13 @@ VenusHttp.prototype.onStart = function () {
  * @param {http.Response} response
  */
 VenusHttp.prototype.routeRequest = function (request, response) {
-  var namespace, handlers;
+  var namespace, handlers, path, url;
 
-  namespace = request.url.split('/')[1].toLowerCase();
-  handlers  = this.namespaces[namespace];
+  url          = request.url.split('/');
+  namespace    = url[1].toLowerCase();
+  path         = url.slice(2).join('/').toLowerCase();
+  handlers     = this.namespaces[namespace];
+  request.path = '/' + path;
 
   if (!handlers) {
     response.end('VenusHttp: No handlers for namespace "' + namespace + '"');
@@ -55,7 +61,6 @@ VenusHttp.prototype.routeRequest = function (request, response) {
     });
   }
 };
-
 
 /**
  * @method onRegisterNamespace
