@@ -1,1 +1,1 @@
-module.exports = require('./VenusHttp');
+module.exports = require('./lib/VenusHttp');
