@@ -1,4 +1,5 @@
-var http = require('http');
+var http    = require('http');
+var Promise = require('bluebird');
 
 module.exports = VenusHttp;
 
@@ -7,36 +8,43 @@ module.exports = VenusHttp;
  * @constructor
  * @param {Venus} venus context object
  */
-function VenusHttp(venus) {
+function VenusHttp(venus, config) {
   this.venus      = venus;
   this.info       = venus.info;
   this.debug      = venus.debug;
+  this.error      = venus.error;
   this.namespaces = {};
-  this.config     = venus.config['venus-http'] || {};
+  this.config     = config || {};
   this.port       = this.config.port || 7878;
+};
 
-  this.bindEvents(venus);
+/**
+ * Initialize plugin
+ */
+VenusHttp.prototype.init = function () {
   this.addNamespaceHandler('', this.onIndexRequest, this);
 };
 
 /**
- * @method bindEvents
- * @param {Venus} venus context object
+ * @property name
  */
-VenusHttp.prototype.bindEvents = function (venus) {
-  var events = this.venus.events;
-
-  venus.on(events.VC_START, this.onStart.bind(this));
-  venus.on('venus-http:register-namespace', this.onRegisterNamespace.bind(this));
-};
+VenusHttp.prototype.name = 'venus-http';
 
 /**
  * @method onStart
  */
-VenusHttp.prototype.onStart = function () {
-  this.server = http.createServer(this.routeRequest.bind(this));
-  this.server.listen(this.port);
-  this.info('Listening on port', this.info.yellow(this.port));
+VenusHttp.prototype.run = function () {
+  return new Promise(function (resolve, reject) {
+    this.server = http.createServer(this.routeRequest.bind(this));
+    this.server.listen(this.port, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        this.info('Listening on port', this.port);
+        resolve();
+      }
+    }.bind(this));
+  }.bind(this));
 };
 
 /**
@@ -63,13 +71,6 @@ VenusHttp.prototype.routeRequest = function (request, response) {
 };
 
 /**
- * @method onRegisterNamespace
- */
-VenusHttp.prototype.onRegisterNamespace = function (namespace, fn, ctx) {
-  this.addNamespaceHandler(namespace, fn, ctx);
-};
-
-/**
  * @method addNamespaceHandler
  */
 VenusHttp.prototype.addNamespaceHandler = function (namespace, fn, ctx) {
@@ -84,7 +85,7 @@ VenusHttp.prototype.addNamespaceHandler = function (namespace, fn, ctx) {
     ctx : ctx
   });
 
-  this.info('Added namespace handler for', this.info.yellow('/' + namespace));
+  this.info('Added namespace handler for /' + namespace);
 };
 
 /**
