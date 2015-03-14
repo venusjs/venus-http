@@ -1,26 +1,32 @@
 module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-eslint');
-  grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-jsdoc');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-release');
 
-  var src  = ['lib/**/*.js', 'index.js', 'bin/*'];
-  var test = ['test/**/*.js'];
+  var src  = ['lib/**/*.js', 'index.js'];
+  var test = ['test/unit/**/*.js'];
 
   grunt.initConfig({
+
+    // Configuration for grunt-contrib-clean
     clean : {
       doc : 'doc',
+      test : 'coverage',
       unit : 'coverage/unit'
     },
+
+    // Configuration for grunt-eslint
     eslint: {
       options: {
         config: '.eslintrc'
       },
       target: src
     },
+
+    // Configuration for grunt-mocha-istanbul
     mocha_istanbul: {
       unit: {
         src: 'test/unit',
@@ -34,36 +40,27 @@ module.exports = function(grunt) {
         }
       }
     },
-    mochaTest: {
-      options: {
-        reporter: 'spec'
-      },
-      unit : {
-        src: ['test/unit/**/*.spec.js']
-      },
-      integration : {
-        src: ['test/integration/**/*.spec.js']
-      }
-    },
+
+    // Configuration for grunt-jsdoc
     jsdoc : {
       dist : {
-        src: ['lib/**/*.js'],
+        src: src,
         options: {
           destination: 'doc'
         }
       }
     },
+
+    // Configuration for grunt-contrib-watch
     watch : {
       src : {
-        files : src,
+        files : [src, test],
         tasks : ['test:fast']
       }
     }
   });
 
-  grunt.registerTask('default', ['eslint', 'build']);
-  grunt.registerTask('build', ['clean:doc','jsdoc']);
+  grunt.registerTask('default', ['doc', 'test']);
+  grunt.registerTask('doc', ['clean:doc','jsdoc']);
   grunt.registerTask('test', ['eslint', 'clean:unit', 'mocha_istanbul']);
-  grunt.registerTask('test:integration', ['mochaTest']);
-  grunt.registerTask('test:unit', ['mochaTest']);
 };
